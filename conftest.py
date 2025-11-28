@@ -25,9 +25,9 @@ def mobile_browser(config):
 
     # BrowserStack требует специальные capabilities
     if "browserstack" in config.remote_url:
-        # BrowserStack specific capabilities
+        # BrowserStack specific capabilities - ВАЖНО: device, а не deviceName!
         options.set_capability('platformName', config.platform_name)
-        options.set_capability('deviceName', config.device_name)  # Важно: deviceName, а не device_name
+        options.set_capability('device', config.device_name)  # ← ИМЕННО ТАК!
         options.set_capability('automationName', config.automation_name)
 
         if config.app:
