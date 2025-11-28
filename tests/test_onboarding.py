@@ -1,21 +1,21 @@
 import allure
 from selene import be
 from selene.support.shared import browser
-import time
 
 
-@allure.title("Тест онбординга Wikipedia")
+
+@allure.title("Wikipedia Test")
 @allure.feature("Onboarding")
-@allure.story("Прохождение 4 экранов приветствия")
+@allure.story("4 Screens")
 def test_wikipedia_onboarding(mobile_management):
-    """Тест проходит 4 экрана онбординга Wikipedia и проверяет каждый экран"""
 
-    with allure.step("Экран 1: The Free Encyclopedia"):
-        # Проверяем заголовок
+
+    with allure.step("he Free Encyclopedia"):
+
         title = browser.element('//*[contains(@text, "The Free Encyclopedia")]')
         title.should(be.visible)
 
-        # Нажимаем Continue
+
         continue_btn = browser.element('//*[@text="Continue"]')
         continue_btn.should(be.visible)
         continue_btn.click()
@@ -26,12 +26,12 @@ def test_wikipedia_onboarding(mobile_management):
             attachment_type=allure.attachment_type.PNG
         )
 
-    with allure.step("Экран 2: New ways to explore"):
-        # Проверяем заголовок
+    with allure.step("New ways to explore"):
+
         title = browser.element('//*[contains(@text, "New ways to explore")]')
         title.should(be.visible)
 
-        # Нажимаем Continue
+
         continue_btn = browser.element('//*[@text="Continue"]')
         continue_btn.should(be.visible)
         continue_btn.click()
@@ -42,12 +42,12 @@ def test_wikipedia_onboarding(mobile_management):
             attachment_type=allure.attachment_type.PNG
         )
 
-    with allure.step("Экран 3: Reading lists with sync"):
-        # Проверяем заголовок
+    with allure.step("Reading lists with sync"):
+
         title = browser.element('//*[contains(@text, "Reading lists with sync")]')
         title.should(be.visible)
 
-        # Нажимаем Continue
+
         continue_btn = browser.element('//*[@text="Continue"]')
         continue_btn.should(be.visible)
         continue_btn.click()
@@ -58,12 +58,12 @@ def test_wikipedia_onboarding(mobile_management):
             attachment_type=allure.attachment_type.PNG
         )
 
-    with allure.step("Экран 4: Data & Privacy"):
-        # Проверяем заголовок
+    with allure.step("Data & Privacy"):
+
         title = browser.element('//*[contains(@text, "Data & Privacy")]')
         title.should(be.visible)
 
-        # Нажимаем Get started
+
         get_started_btn = browser.element('//*[@text="Get started"]')
         get_started_btn.should(be.visible)
         get_started_btn.click()
@@ -74,8 +74,8 @@ def test_wikipedia_onboarding(mobile_management):
             attachment_type=allure.attachment_type.PNG
         )
 
-    with allure.step("Проверяем главный экран приложения"):
-        # Проверяем что видна поисковая строка
+    with allure.step("Main page"):
+
         search_container = browser.element('//*[@resource-id="org.wikipedia.alpha:id/search_container"]')
         search_container.should(be.visible)
 

@@ -18,21 +18,21 @@ class Config(BaseModel):
 
 
 def load_config():
-    # Сначала пробуем загрузить из .env.credentials (для локальной работы)
+
     try:
         from dotenv import load_dotenv
         load_dotenv('.env.credentials')
     except:
         pass
 
-    # Берем credentials из переменных окружения ИЛИ из файла
+
     bstack_username = os.getenv('BSTACK_USERNAME')
     bstack_access_key = os.getenv('BSTACK_ACCESS_KEY')
 
-    # Определяем контекст
+
     context = os.getenv('CONTEXT', 'local_emulator')
 
-    # Загружаем конфиг для контекста
+
     try:
         from dotenv import load_dotenv
         env_file = f'.env.{context}'

@@ -9,14 +9,14 @@ import time
 
 @pytest.fixture(scope='function')
 def mobile_management():
-    print(f"🚀 Запускаем тест на {config.context}")
-    print(f"📱 Подключаемся к: {config.remote_url}")
-    print(f"📟 Устройство: {config.device_name}")
+    print(f"Запускаем тест на {config.context}")
+    print(f"Подключаемся к: {config.remote_url}")
+    print(f"Устройство: {config.device_name}")
 
     options = UiAutomator2Options()
 
     if config.context == 'bstack':
-        # BrowserStack capabilities
+
         options.set_capability('platformName', config.platform_name)
         options.set_capability('platformVersion', config.platform_version)
         options.set_capability('deviceName', config.device_name)
@@ -32,7 +32,7 @@ def mobile_management():
             "sessionName": "Wikipedia Onboarding Test"
         })
     else:
-        # Local capabilities - БЕЗ APP!
+
         options.platform_name = config.platform_name
         options.device_name = config.device_name
         options.app_package = config.app_package
@@ -46,9 +46,9 @@ def mobile_management():
             command_executor=config.remote_url,
             options=options
         )
-        print("✅ WebDriver создан успешно!")
+        print("WebDriver создан успешно!")
     except Exception as e:
-        print(f"❌ Ошибка создания WebDriver: {e}")
+        print(f"Ошибка создания WebDriver: {e}")
         raise
 
     browser.config.timeout = 10
@@ -59,6 +59,6 @@ def mobile_management():
     if browser.driver:
         try:
             browser.quit()
-            print("✅ Браузер закрыт")
+            print("Браузер закрыт")
         except:
-            print("⚠️ Ошибка при закрытии браузера")
+            print("Ошибка при закрытии браузера")
