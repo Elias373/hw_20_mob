@@ -20,13 +20,14 @@ class BaseConfig(BaseSettings):
     app_package: Optional[str] = Field(default="org.wikipedia.alpha")
     app_activity: Optional[str] = Field(default="org.wikipedia.main.MainActivity")
 
-    # BrowserStack credentials - ВАЖНО: имена полей должны совпадать с .env
-    bstack_userName: Optional[str] = Field(None)
-    bstack_accessKey: Optional[str] = Field(None)  # Должно быть accessKey (не access_key)
+    # BrowserStack credentials - с alias для поддержки разных имен
+    bstack_userName: Optional[str] = Field(None, alias='BSTACK_USERNAME')
+    bstack_accessKey: Optional[str] = Field(None, alias='BSTACK_ACCESS_KEY')
 
     model_config = SettingsConfigDict(
         case_sensitive=False,
-        extra='ignore'
+        extra='ignore',
+        populate_by_name=True  # Разрешает использовать alias
     )
 
 
