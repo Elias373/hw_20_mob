@@ -2,16 +2,13 @@ import pytest
 from selene import browser
 from appium import webdriver
 from appium.options.android import UiAutomator2Options
-from config.config import load_config  # Импортируем функцию, а не объект
+from config.config import config
 import allure
 import time
 
 
 @pytest.fixture(scope='function')
 def mobile_management():
-    # ПЕРЕЗАГРУЖАЕМ config при каждом тесте
-    config = load_config()
-
     print(f"🚀 Запускаем тест на {config.context}")
     print(f"📱 Подключаемся к: {config.remote_url}")
     print(f"📟 Устройство: {config.device_name}")
@@ -35,7 +32,7 @@ def mobile_management():
             "sessionName": "Wikipedia Onboarding Test"
         })
     else:
-        # Local capabilities
+        # Local capabilities - БЕЗ APP!
         options.platform_name = config.platform_name
         options.device_name = config.device_name
         options.app_package = config.app_package

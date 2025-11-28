@@ -55,5 +55,5 @@ def load_config():
         app=os.getenv('APP')
     )
 
-# УБЕРИ эту строку - config будет создаваться при каждом вызове load_config()
-# config = load_config()
+
+config = load_config()
