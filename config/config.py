@@ -1,6 +1,5 @@
 from pydantic import BaseModel
 import os
-from dotenv import load_dotenv
 from typing import Optional
 
 
@@ -19,15 +18,32 @@ class Config(BaseModel):
 
 
 def load_config():
-    # Сначала загружаем credentials
-    load_dotenv('.env.credentials')
+    # Принудительно сбрасываем кеш переменных окружения
+    import importlib
+    importlib.reload(os)
 
-    # Определяем контекст и загружаем нужный файл
+    # Сначала пробуем загрузить из .env.credentials (для локальной работы)
+    try:
+        from dotenv import load_dotenv
+        load_dotenv('.env.credentials')
+    except:
+        pass
+
+    # Берем credentials из переменных окружения ИЛИ из файла
+    bstack_username = os.getenv('BSTACK_USERNAME')
+    bstack_access_key = os.getenv('BSTACK_ACCESS_KEY')
+
+    # Определяем контекст - принудительно сбрасываем к local_emulator если не указано
     context = os.getenv('CONTEXT', 'local_emulator')
-    env_file = f'.env.{context}'
 
-    if os.path.exists(env_file):
-        load_dotenv(env_file)
+    # Загружаем конфиг для контекста
+    try:
+        from dotenv import load_dotenv
+        env_file = f'.env.{context}'
+        if os.path.exists(env_file):
+            load_dotenv(env_file)
+    except:
+        pass
 
     return Config(
         context=os.getenv('CONTEXT', 'local_emulator'),
@@ -37,11 +53,12 @@ def load_config():
         app_activity=os.getenv('APP_ACTIVITY', 'org.wikipedia.main.MainActivity'),
         automation_name=os.getenv('AUTOMATION_NAME', 'UiAutomator2'),
         remote_url=os.getenv('REMOTE_URL', 'http://localhost:4723'),
-        bstack_username=os.getenv('BSTACK_USERNAME'),
-        bstack_access_key=os.getenv('BSTACK_ACCESS_KEY'),
+        bstack_username=bstack_username,
+        bstack_access_key=bstack_access_key,
         platform_version=os.getenv('PLATFORM_VERSION'),
         app=os.getenv('APP')
     )
 
 
+# Пересоздаем config при каждом импорте
 config = load_config()
