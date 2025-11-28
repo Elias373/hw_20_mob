@@ -46,11 +46,16 @@ def mobile_browser(config):
 
     try:
         from selene.support.shared import browser
+        print(f"🚀 Connecting to: {config.remote_url}")
+        print(f"📱 Device: {config.device_name}")
+        print(f"🔑 Username: {config.bstack_userName}")
+
         browser.config.driver = webdriver.Remote(config.remote_url, options=options)
-        browser.config.timeout = 10
+        browser.config.timeout = 30  # Увеличим таймаут
 
         yield browser
 
         browser.quit()
     except Exception as e:
-        pytest.skip(f"Browser setup failed: {e}")
+        print(f"❌ Browser setup failed: {e}")
+        raise  # Не пропускаем, а падаем с ошибкой
