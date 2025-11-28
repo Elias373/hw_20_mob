@@ -18,10 +18,6 @@ class Config(BaseModel):
 
 
 def load_config():
-    # Принудительно сбрасываем кеш переменных окружения
-    import importlib
-    importlib.reload(os)
-
     # Сначала пробуем загрузить из .env.credentials (для локальной работы)
     try:
         from dotenv import load_dotenv
@@ -33,7 +29,7 @@ def load_config():
     bstack_username = os.getenv('BSTACK_USERNAME')
     bstack_access_key = os.getenv('BSTACK_ACCESS_KEY')
 
-    # Определяем контекст - принудительно сбрасываем к local_emulator если не указано
+    # Определяем контекст
     context = os.getenv('CONTEXT', 'local_emulator')
 
     # Загружаем конфиг для контекста
@@ -46,7 +42,7 @@ def load_config():
         pass
 
     return Config(
-        context=os.getenv('CONTEXT', 'local_emulator'),
+        context=context,  # Важно: используем вычисленный context!
         platform_name=os.getenv('PLATFORM_NAME', 'Android'),
         device_name=os.getenv('DEVICE_NAME', 'emulator-5554'),
         app_package=os.getenv('APP_PACKAGE', 'org.wikipedia.alpha'),
@@ -60,5 +56,4 @@ def load_config():
     )
 
 
-# Пересоздаем config при каждом импорте
 config = load_config()
