@@ -20,9 +20,9 @@ class BaseConfig(BaseSettings):
     app_package: Optional[str] = Field(default="org.wikipedia.alpha")
     app_activity: Optional[str] = Field(default="org.wikipedia.main.MainActivity")
 
-    # BrowserStack credentials
+    # BrowserStack credentials - ВАЖНО: имена полей должны совпадать с .env
     bstack_userName: Optional[str] = Field(None)
-    bstack_accessKey: Optional[str] = Field(None)
+    bstack_accessKey: Optional[str] = Field(None)  # Должно быть accessKey (не access_key)
 
     model_config = SettingsConfigDict(
         case_sensitive=False,
@@ -49,7 +49,7 @@ class Config:
         else:
             context_config = BaseConfig()
 
-        # Объединяем конфигурации (приоритет у контекстных значений)
+        # Объединяем конфигурации
         for field in BaseConfig.model_fields:
             context_value = getattr(context_config, field)
             creds_value = getattr(credentials_config, field)
