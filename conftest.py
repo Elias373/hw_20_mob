@@ -23,26 +23,42 @@ def config(request):
 def mobile_browser(config):
     options = UiAutomator2Options()
 
-    options.platform_name = config.platform_name
-    options.device_name = config.device_name
-    options.automation_name = config.automation_name
+    # BrowserStack требует специальные capabilities
+    if "browserstack" in config.remote_url:
+        # BrowserStack specific capabilities
+        options.set_capability('platformName', config.platform_name)
+        options.set_capability('deviceName', config.device_name)  # Важно: deviceName, а не device_name
+        options.set_capability('automationName', config.automation_name)
 
-    if config.app:
-        options.app = config.app
-    if config.app_package:
-        options.app_package = config.app_package
-    if config.app_activity:
-        options.app_activity = config.app_activity
+        if config.app:
+            options.set_capability('app', config.app)
+        if config.app_package:
+            options.set_capability('appPackage', config.app_package)
+        if config.app_activity:
+            options.set_capability('appActivity', config.app_activity)
 
-    # BrowserStack options
-    if config.bstack_userName and config.bstack_accessKey:
-        options.set_capability('bstack:options', {
-            "userName": config.bstack_userName,
-            "accessKey": config.bstack_accessKey,
-            "projectName": "Wikipedia Onboarding",
-            "buildName": "Jenkins Build",
-            "sessionName": "Onboarding Test"
-        })
+        # BrowserStack options
+        if config.bstack_userName and config.bstack_accessKey:
+            options.set_capability('bstack:options', {
+                "userName": config.bstack_userName,
+                "accessKey": config.bstack_accessKey,
+                "projectName": "Wikipedia Onboarding",
+                "buildName": "Jenkins Build",
+                "sessionName": "Onboarding Test",
+                "appiumVersion": "2.0.0"
+            })
+    else:
+        # Local Appium settings
+        options.platform_name = config.platform_name
+        options.device_name = config.device_name
+        options.automation_name = config.automation_name
+
+        if config.app:
+            options.app = config.app
+        if config.app_package:
+            options.app_package = config.app_package
+        if config.app_activity:
+            options.app_activity = config.app_activity
 
     try:
         from selene.support.shared import browser
@@ -51,11 +67,11 @@ def mobile_browser(config):
         print(f"🔑 Username: {config.bstack_userName}")
 
         browser.config.driver = webdriver.Remote(config.remote_url, options=options)
-        browser.config.timeout = 30  # Увеличим таймаут
+        browser.config.timeout = 30
 
         yield browser
 
         browser.quit()
     except Exception as e:
         print(f"❌ Browser setup failed: {e}")
-        raise  # Не пропускаем, а падаем с ошибкой
+        raise
