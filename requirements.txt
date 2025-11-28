@@ -1,5 +1,7 @@
 appium-python-client>=2.0.0
+selene==2.0.0rc9
 pydantic>=2.0.0
 pydantic-settings>=2.0.0
 python-dotenv>=0.19.0
 pytest>=6.0.0
+allure-pytest>=2.0.0
