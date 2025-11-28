@@ -42,7 +42,7 @@ def load_config():
         pass
 
     return Config(
-        context=context,  # Важно: используем вычисленный context!
+        context=context,
         platform_name=os.getenv('PLATFORM_NAME', 'Android'),
         device_name=os.getenv('DEVICE_NAME', 'emulator-5554'),
         app_package=os.getenv('APP_PACKAGE', 'org.wikipedia.alpha'),
@@ -55,5 +55,5 @@ def load_config():
         app=os.getenv('APP')
     )
 
-
-config = load_config()
+# УБЕРИ эту строку - config будет создаваться при каждом вызове load_config()
+# config = load_config()
