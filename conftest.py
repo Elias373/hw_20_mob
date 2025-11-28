@@ -1,77 +1,64 @@
 import pytest
+from selene import browser
 from appium import webdriver
 from appium.options.android import UiAutomator2Options
-from config import Config
+from config.config import config
+import allure
+import time
 
 
-def pytest_addoption(parser):
-    parser.addoption(
-        "--context",
-        action="store",
-        default="local_emulator",
-        help="Context for test configuration: local_emulator, local_real, bstack"
-    )
+@pytest.fixture(scope='function')
+def mobile_management():
+    print(f"🚀 Запускаем тест на {config.context}")
+    print(f"📱 Подключаемся к: {config.remote_url}")
+    print(f"📟 Устройство: {config.device_name}")
 
-
-@pytest.fixture(scope="session")
-def config(request):
-    context = request.config.getoption("--context")
-    return Config(context=context)
-
-
-@pytest.fixture(scope="function")
-def mobile_browser(config):
     options = UiAutomator2Options()
 
-    # BrowserStack требует специальные capabilities
-    if "browserstack" in config.remote_url:
-        # BrowserStack specific capabilities - ВАЖНО: device, а не deviceName!
+    if config.context == 'bstack':
+        # BrowserStack capabilities
         options.set_capability('platformName', config.platform_name)
-        options.set_capability('device', config.device_name)  # ← ИМЕННО ТАК!
+        options.set_capability('platformVersion', config.platform_version)
+        options.set_capability('deviceName', config.device_name)
+        options.set_capability('app', config.app)
+        options.set_capability('appPackage', config.app_package)
+        options.set_capability('appActivity', config.app_activity)
         options.set_capability('automationName', config.automation_name)
-
-        if config.app:
-            options.set_capability('app', config.app)
-        if config.app_package:
-            options.set_capability('appPackage', config.app_package)
-        if config.app_activity:
-            options.set_capability('appActivity', config.app_activity)
-
-        # BrowserStack options
-        if config.bstack_userName and config.bstack_accessKey:
-            options.set_capability('bstack:options', {
-                "userName": config.bstack_userName,
-                "accessKey": config.bstack_accessKey,
-                "projectName": "Wikipedia Onboarding",
-                "buildName": "Jenkins Build",
-                "sessionName": "Onboarding Test",
-                "appiumVersion": "2.0.0"
-            })
+        options.set_capability('bstack:options', {
+            "userName": config.bstack_username,
+            "accessKey": config.bstack_access_key,
+            "projectName": "Wikipedia Android Tests",
+            "buildName": "Wikipedia Build",
+            "sessionName": "Wikipedia Onboarding Test"
+        })
     else:
-        # Local Appium settings
+        # Local capabilities
         options.platform_name = config.platform_name
         options.device_name = config.device_name
+        options.app_package = config.app_package
+        options.app_activity = config.app_activity
         options.automation_name = config.automation_name
 
-        if config.app:
-            options.app = config.app
-        if config.app_package:
-            options.app_package = config.app_package
-        if config.app_activity:
-            options.app_activity = config.app_activity
+    print("🔗 Создаем WebDriver...")
 
     try:
-        from selene.support.shared import browser
-        print(f"🚀 Connecting to: {config.remote_url}")
-        print(f"📱 Device: {config.device_name}")
-        print(f"🔑 Username: {config.bstack_userName}")
-
-        browser.config.driver = webdriver.Remote(config.remote_url, options=options)
-        browser.config.timeout = 30
-
-        yield browser
-
-        browser.quit()
+        browser.config.driver = webdriver.Remote(
+            command_executor=config.remote_url,
+            options=options
+        )
+        print("✅ WebDriver создан успешно!")
     except Exception as e:
-        print(f"❌ Browser setup failed: {e}")
+        print(f"❌ Ошибка создания WebDriver: {e}")
         raise
+
+    browser.config.timeout = 10
+    time.sleep(5)
+
+    yield
+
+    if browser.driver:
+        try:
+            browser.quit()
+            print("✅ Браузер закрыт")
+        except:
+            print("⚠️ Ошибка при закрытии браузера")
