@@ -4,13 +4,33 @@ from appium import webdriver
 from appium.options.android import UiAutomator2Options
 from config.config import config
 import allure
-import time
+import subprocess
+import json
+import os
+
+
+def attach_bstack_video(session_id):
+
+    try:
+        url = f"https://api.browserstack.com/app-automate/sessions/{session_id}.json"
+        auth = f"{config.bstack_username}:{config.bstack_access_key}"
+
+        result = subprocess.run(['curl', '-u', auth, '-s', url], capture_output=True, text=True)
+
+        if result.returncode == 0:
+            video_url = json.loads(result.stdout).get('automation_session', {}).get('video_url')
+            if video_url:
+                subprocess.run(['curl', '-s', '-o', 'video.mp4', video_url])
+                if os.path.exists('video.mp4'):
+                    with open('video.mp4', 'rb') as f:
+                        allure.attach(f.read(), name="Video", attachment_type=allure.attachment_type.MP4)
+                    os.remove('video.mp4')
+    except Exception:
+        pass
 
 
 @pytest.fixture(scope='function')
-def mobile_management(request):
-    print(f"🚀 Запускаем тест на {config.context}")
-
+def mobile_management():
     options = UiAutomator2Options()
     session_id = None
 
@@ -25,41 +45,18 @@ def mobile_management(request):
         options.set_capability('bstack:options', {
             "userName": config.bstack_username,
             "accessKey": config.bstack_access_key,
-            "projectName": "Wikipedia Android Tests",
-            "buildName": "Wikipedia Build",
-            "sessionName": "Wikipedia Onboarding Test",
-            "video": True,
-            "networkLogs": True
+            "video": True
         })
 
-    print("🔗 Создаем WebDriver...")
-
-    try:
-        browser.config.driver = webdriver.Remote(
-            command_executor=config.remote_url,
-            options=options
-        )
-        session_id = browser.driver.session_id
-        print(f"✅ WebDriver создан! Session ID: {session_id}")
-
-
-        if config.context == 'bstack' and session_id:
-            bs_url = f"https://app-automate.browserstack.com/dashboard/v2/builds/sessions/{session_id}"
-            allure.dynamic.link(bs_url, name="🎥 BrowserStack Session")
-
-
-    except Exception as e:
-        print(f"❌ Ошибка создания WebDriver: {e}")
-        raise
+    browser.config.driver = webdriver.Remote(config.remote_url, options=options)
+    session_id = browser.driver.session_id
 
     browser.config.timeout = 10
-    time.sleep(5)
 
     yield
 
+    if config.context == 'bstack':
+        attach_bstack_video(session_id)
+
     if browser.driver:
-        try:
-            browser.quit()
-            print("✅ Браузер закрыт")
-        except:
-            print("⚠️ Ошибка при закрытии браузера")
+        browser.quit()
