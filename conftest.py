@@ -4,27 +4,25 @@ from appium import webdriver
 from appium.options.android import UiAutomator2Options
 from config.config import config
 import allure
-import subprocess
+import urllib.request
+import base64
 import json
 import time
 
 
 def attach_bstack_video(session_id):
-
     time.sleep(5)
-
     url = f"https://api.browserstack.com/app-automate/sessions/{session_id}.json"
-    auth = f"{config.bstack_username}:{config.bstack_access_key}"
+    auth = base64.b64encode(f"{config.bstack_username}:{config.bstack_access_key}".encode()).decode()
 
-    result = subprocess.run(['curl', '-u', auth, '-s', url], capture_output=True, text=True)
+    req = urllib.request.Request(url)
+    req.add_header('Authorization', f'Basic {auth}')
 
-    if result.returncode == 0:
-        video_url = json.loads(result.stdout).get('automation_session', {}).get('video_url')
+    with urllib.request.urlopen(req) as response:
+        video_url = json.loads(response.read().decode()).get('automation_session', {}).get('video_url')
         if video_url:
-            subprocess.run(['curl', '-s', '-o', 'video.mp4', video_url])
-            with open('video.mp4', 'rb') as f:
-                allure.attach(f.read(), name="Video", attachment_type=allure.attachment_type.MP4)
-            subprocess.run(['rm', 'video.mp4'])
+            with urllib.request.urlopen(video_url) as video_response:
+                allure.attach(video_response.read(), name="Video", attachment_type=allure.attachment_type.MP4)
 
 
 @pytest.fixture(scope='function')
