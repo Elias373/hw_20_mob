@@ -6,33 +6,30 @@ from config.config import config
 import allure
 import subprocess
 import json
-import os
+import time
 
 
 def attach_bstack_video(session_id):
 
-    try:
-        url = f"https://api.browserstack.com/app-automate/sessions/{session_id}.json"
-        auth = f"{config.bstack_username}:{config.bstack_access_key}"
+    time.sleep(5)
 
-        result = subprocess.run(['curl', '-u', auth, '-s', url], capture_output=True, text=True)
+    url = f"https://api.browserstack.com/app-automate/sessions/{session_id}.json"
+    auth = f"{config.bstack_username}:{config.bstack_access_key}"
 
-        if result.returncode == 0:
-            video_url = json.loads(result.stdout).get('automation_session', {}).get('video_url')
-            if video_url:
-                subprocess.run(['curl', '-s', '-o', 'video.mp4', video_url])
-                if os.path.exists('video.mp4'):
-                    with open('video.mp4', 'rb') as f:
-                        allure.attach(f.read(), name="Video", attachment_type=allure.attachment_type.MP4)
-                    os.remove('video.mp4')
-    except Exception:
-        pass
+    result = subprocess.run(['curl', '-u', auth, '-s', url], capture_output=True, text=True)
+
+    if result.returncode == 0:
+        video_url = json.loads(result.stdout).get('automation_session', {}).get('video_url')
+        if video_url:
+            subprocess.run(['curl', '-s', '-o', 'video.mp4', video_url])
+            with open('video.mp4', 'rb') as f:
+                allure.attach(f.read(), name="Video", attachment_type=allure.attachment_type.MP4)
+            subprocess.run(['rm', 'video.mp4'])
 
 
 @pytest.fixture(scope='function')
 def mobile_management():
     options = UiAutomator2Options()
-    session_id = None
 
     if config.context == 'bstack':
         options.set_capability('platformName', config.platform_name)
@@ -41,7 +38,6 @@ def mobile_management():
         options.set_capability('app', config.app)
         options.set_capability('appPackage', config.app_package)
         options.set_capability('appActivity', config.app_activity)
-        options.set_capability('automationName', config.automation_name)
         options.set_capability('bstack:options', {
             "userName": config.bstack_username,
             "accessKey": config.bstack_access_key,
@@ -49,14 +45,11 @@ def mobile_management():
         })
 
     browser.config.driver = webdriver.Remote(config.remote_url, options=options)
-    session_id = browser.driver.session_id
-
     browser.config.timeout = 10
 
     yield
 
     if config.context == 'bstack':
-        attach_bstack_video(session_id)
+        attach_bstack_video(browser.driver.session_id)
 
-    if browser.driver:
-        browser.quit()
+    browser.quit()
