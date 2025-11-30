@@ -4,25 +4,16 @@ from appium import webdriver
 from appium.options.android import UiAutomator2Options
 from config.config import config
 import allure
-import urllib.request
-import base64
-import json
-import time
+import requests
 
 
-def attach_bstack_video(session_id):
-    time.sleep(5)
-    url = f"https://api.browserstack.com/app-automate/sessions/{session_id}.json"
-    auth = base64.b64encode(f"{config.bstack_username}:{config.bstack_access_key}".encode()).decode()
-
-    req = urllib.request.Request(url)
-    req.add_header('Authorization', f'Basic {auth}')
-
-    with urllib.request.urlopen(req) as response:
-        video_url = json.loads(response.read().decode()).get('automation_session', {}).get('video_url')
-        if video_url:
-            with urllib.request.urlopen(video_url) as video_response:
-                allure.attach(video_response.read(), name="Video", attachment_type=allure.attachment_type.MP4)
+def get_browserstack_video(session_id):
+    try:
+        url = f"https://api.browserstack.com/app-automate/sessions/{session_id}.json"
+        response = requests.get(url, auth=(config.bstack_username, config.bstack_access_key))
+        return response.json().get('automation_session', {}).get('video_url') if response.status_code == 200 else None
+    except:
+        return None
 
 
 @pytest.fixture(scope='function')
@@ -41,6 +32,11 @@ def mobile_management():
             "accessKey": config.bstack_access_key,
             "video": True
         })
+    else:
+        options.platform_name = config.platform_name
+        options.device_name = config.device_name
+        options.app_package = config.app_package
+        options.app_activity = config.app_activity
 
     browser.config.driver = webdriver.Remote(config.remote_url, options=options)
     browser.config.timeout = 10
@@ -48,6 +44,12 @@ def mobile_management():
     yield
 
     if config.context == 'bstack':
-        attach_bstack_video(browser.driver.session_id)
+        video_url = get_browserstack_video(browser.driver.session_id)
+        if video_url:
+            allure.attach(
+                f'<video controls><source src="{video_url}"></video>',
+                name="Video",
+                attachment_type=allure.attachment_type.HTML
+            )
 
     browser.quit()
